@@ -163,6 +163,15 @@ details.card>summary::-webkit-details-marker{display:none}details.card>summary::
 <textarea id="rp" rows="8" readonly onclick="this.select()"></textarea></div>
 <div class="card"><h2>Rapport mensuel (PDF)</h2><input type="month" id="mo"><label class="m" style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="pp" style="width:20px;height:20px;margin:0">Inclure les photos</label><button style="width:100%;margin-top:10px" onclick="xp()">Générer le PDF</button><div class="m" id="xm" style="margin-top:6px"></div></div>
 </section>
+
+<section class="sec" id="s7">
+ <div class="pgh"><button class="bk" onclick="tab(5)" aria-label="Accueil"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 6l-6 6 6 6"/></svg></button><b>Modules opérationnels</b></div>
+ <div class="card"><div class="m">Ces modules partagent les données avec le compte connecté selon les règles d'accès Supabase. Le responsable peut consulter les fiches de l'équipe.</div></div>
+ <div class="chips" id="modTabs"></div>
+ <div id="modForm" class="card"></div>
+ <div id="modList"></div>
+</section>
+
 </div>
 <div id="toast"></div><div class="vw" id="vw"></div><div class="vw" id="lo"></div>
 <nav><button class="on" data-t="5" onclick="tab(5)"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Accueil</button><button data-t="0" onclick="tab(0)"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Missions</button><button data-t="3" onclick="tab(3)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Dossier</button><button data-t="4" id="nt4" style="display:none" onclick="tab(4);team()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M15 15c3 0 6 1.5 6 4"/></svg>Équipe</button><button data-t="2" onclick="tab(2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Compte</button></nav>
@@ -192,7 +201,7 @@ const $=i=>document.getElementById(i);
 function save(){try{localStorage.setItem(SK(),JSON.stringify(S))}catch(e){}syncSoon()}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function hm(ts){return new Date(ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-function tab(n){[0,1,2,3,4,5,6].forEach(i=>{const e=$('s'+i);if(e)e.classList.toggle('on',i==n)});const h=n==1||n==6?5:n;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==h));try{scrollTo(0,0)}catch(e){}}
+function tab(n){[0,1,2,3,4,5,6,7].forEach(i=>{const e=$('s'+i);if(e)e.classList.toggle('on',i==n)});const h=n==1||n==6?5:n;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==h));try{scrollTo(0,0)}catch(e){}}
 function today(){const d=new Date().toDateString();return S.p.filter(x=>new Date(x.ts).toDateString()==d)}
 const ON=()=>CFG.url&&CFG.key;let PR=null,TM=null;
 async function api(p,o={}){const h={apikey:CFG.key,'Content-Type':'application/json',...(AU?{Authorization:'Bearer '+AU.access_token}:{}),...(o.h||{})};const r=await fetch(CFG.url+p,{method:o.m||'GET',headers:h,body:o.b?JSON.stringify(o.b):undefined});if(r.status==401&&AU&&!o.rt){await refresh();return api(p,{...o,rt:1})}if(!r.ok)throw new Error(await r.text());const t=await r.text();return t?JSON.parse(t):null}
@@ -273,8 +282,8 @@ const sg=cnt.map((k,e)=>{if(!k)return'';const f=k/tot,x=`<circle cx="50" cy="50"
 $('donut').innerHTML=`<div class="dn"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R2}" fill="none" stroke="var(--b)" stroke-width="12"/>${sg}<text x="50" y="56" text-anchor="middle" class="rg-t" style="font-size:20px">${tot}</text></svg><div class="lgx2">${cnt.map((k,e)=>`<span><u style="background:${CL[e]}"></u>${ST[e]} <b>${k}</b></span>`).join('')}</div></div>`;
 // tuiles
 const tdy=calc(today(),true),T=[[0,'Missions','mis',S.t.filter(x=>x.e!=3).length+' ouvertes'],[1,'Pointage','clk',hc(tdy.w)+' h'],[3,'Dossier','dos',S.ins.length+' · '+S.ex.length+' · '+S.inc.length],[6,'Rapports','rap','PDF · CSV']];
-if(PR&&PR.role=='manager')T.push([4,'Équipe','eq','Responsable']);T.push([2,'Compte','usr',nm||'Profil']);
-$('htiles').innerHTML=T.map(t=>`<button class="tile" onclick="tab(${t[0]})${t[0]==4?';team()':''}"><svg viewBox="0 0 24 24">${ICN[t[2]]}</svg><b>${t[1]}</b><span>${esc(t[3])}</span></button>`).join('')}
+if(PR&&PR.role=='manager')T.push([4,'Équipe','eq','Responsable']);T.push([2,'Compte','usr',nm||'Profil']);T.push([7,'Modules','dos','7 modules opérationnels']);
+$('htiles').innerHTML=T.map(t=>`<button class="tile" onclick="tab(${t[0]})${t[0]==4?';team()':t[0]==7?';modLoad()':''}"><svg viewBox="0 0 24 24">${ICN[t[2]]}</svg><b>${t[1]}</b><span>${esc(t[3])}</span></button>`).join('')}
 async function loadP(){try{const r=await api('/rest/v1/profiles?id=eq.'+AU.user.id+'&select=name,role,first_name,last_name,phone,contact_email,avatar');PR=r[0]||{};pfUI();renderH();if(PR.role=='manager')$('nt4').style.display=''}catch(e){}}
 function stat(d){const n=new Date().toDateString(),pl=(d.p||[]).filter(x=>new Date(x.ts).toDateString()==n),c=calc(pl,true),t=d.t||[];return{w:c.w,st:pl.length?c.st:'out',n:t.length,ok:t.filter(x=>x.e==3).length,bl:t.filter(x=>x.e==2).length,ex:(d.ex||[]).reduce((a,x)=>a+x.a,0),ic:(d.inc||[]).length}}
 const SL={out:['Hors service','var(--m)'],in:['Au travail','var(--ok)'],pause:['En pause','var(--w)'],travel:['En trajet','var(--v)']};
@@ -397,5 +406,62 @@ $('tasks').innerHTML=S.t.map((x,i)=>(Qs?!(x.c+' '+x.t+' '+x.r+' '+x.n).toLowerCa
 <div class="ph">${x.ph.map((q,j)=>`<img src="${q}" onclick="view(${i},${j})">`).join('')}</div>
 <label class="btn" style="margin-top:10px">Ajouter une photo<input type="file" accept="image/*" capture="environment" hidden onchange="photo(${i},this.files[0])"></label>${x.sg?`<div class="m" style="margin-top:8px">Confirmé par ${esc(x.sg.n)} · ${fmt(x.sg.ts)}</div><div class="ph"><img src="${x.sg.img}" onclick="zoom(this.src)"></div>`:`<button class="s" style="width:100%;margin-top:8px" onclick="sign(${i})">Faire signer le client</button>`}</div></div>`).join('');
 if(!S.t.length)$('tasks').innerHTML='<div class="card"><div class="m">Aucune tâche pour le moment. Les missions envoyées par le responsable apparaîtront ici.</div></div>';$('ttl').textContent=S.site||'Mission';$('hsub').textContent=PR&&PR.name?PR.name:'';warnP();renderP();renderD();renderH();tick()}
+
+const MODS=[
+ {k:'maintenance',n:'Maintenance',desc:'Interventions, contrôles et réparations'},
+ {k:'stock',n:'Matériel & Stock',desc:'Équipements, quantités et mouvements'},
+ {k:'sites',n:'Clients & Sites',desc:'Clients, adresses et sites d’intervention'},
+ {k:'planning',n:'Planning',desc:'Rendez-vous et interventions planifiées'},
+ {k:'vehicles',n:'Véhicules',desc:'Véhicules, affectations et suivi'},
+ {k:'documents',n:'Documents & Contrats',desc:'Références et échéances des documents'},
+ {k:'notifications',n:'Notifications',desc:'Alertes et rappels internes'}
+];
+let MODKEY='maintenance', MODROWS=[], MODPEOPLE=[];
+function modEsc(v){return esc(v==null?'':String(v))}
+function modGo(k){MODKEY=k;renderMods()}
+async function modLoad(){
+ if(!AU){$('modForm').innerHTML='<div class="m">Connectez-vous pour utiliser les modules.</div>';return}
+ $('modList').innerHTML='<div class="card m">Chargement…</div>';
+ try{
+  const jobs=[api('/rest/v1/app_module_records?select=*&order=created_at.desc')];
+  if(PR&&PR.role==='manager')jobs.push(api('/rest/v1/profiles?select=id,name,role&order=name.asc'));
+  const out=await Promise.all(jobs);MODROWS=out[0]||[];MODPEOPLE=out[1]||[];
+  renderMods();
+ }catch(e){
+  $('modForm').innerHTML='<div class="m">Les modules nécessitent la migration SQL de Supabase. Ouvrez le fichier supabase/migrations/20261014_mado_operational_modules.sql dans GitHub et exécutez-le dans Supabase SQL Editor.</div>';
+  $('modList').innerHTML='<div class="card m">Erreur de chargement : '+modEsc(String(e.message).slice(0,180))+'</div>';
+ }
+}
+function renderMods(){
+ $('modTabs').innerHTML=MODS.map(m=>'<button class="chip '+(m.k===MODKEY?'on':'')+'" onclick="modGo(\''+m.k+'\')">'+m.n+'</button>').join('');
+ const m=MODS.find(x=>x.k===MODKEY)||MODS[0];
+ const owners=(PR&&PR.role==='manager'&&MODPEOPLE.length)?'<label class="m">Attribuer à</label><select id="modOwner">'+MODPEOPLE.map(p=>'<option value="'+modEsc(p.id)+'">'+modEsc(p.name||p.id)+' ('+modEsc(p.role||'technicien')+')</option>').join('')+'</select>':'';
+ $('modForm').innerHTML='<h2>'+m.n+'</h2><div class="m">'+m.desc+'</div><input id="modTitle" maxlength="160" placeholder="'+(MODKEY==='stock'?'Nom de l’équipement / mouvement':MODKEY==='sites'?'Nom du client ou du site':MODKEY==='vehicles'?'Véhicule / immatriculation':MODKEY==='documents'?'Nom du document ou contrat':MODKEY==='notifications'?'Titre de l’alerte':'Titre')+'"><textarea id="modDetails" rows="3" maxlength="4000" placeholder="Détails, référence, quantité, adresse ou notes"></textarea><div class="row"><div><label class="m">Date</label><input id="modDate" type="date"></div><div><label class="m">État</label><select id="modStatus"><option>Nouveau</option><option>Planifié</option><option>En cours</option><option>Terminé</option><option>Annulé</option></select></div></div>'+owners+'<button style="width:100%;margin-top:12px" onclick="modAdd()">Enregistrer</button><div id="modMsg" class="m" style="margin-top:8px"></div>';
+ const rows=MODROWS.filter(r=>r.module_key===MODKEY);
+ $('modList').innerHTML='<h2 style="margin:16px 0 10px">'+m.n+' — '+rows.length+'</h2>'+(rows.map(r=>{
+ const person=MODPEOPLE.find(p=>p.id===r.owner_id);
+ const canManage=(PR&&PR.role==='manager')||r.owner_id===AU.user.id;
+ return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><b>'+modEsc(r.title)+'</b><span class="pill" style="--led:'+(r.status==='Terminé'?'var(--ok)':r.status==='En cours'?'var(--a)':'var(--w)')+'">'+modEsc(r.status)+'</span></div><div class="m" style="margin-top:6px">'+modEsc(r.event_date||'Sans date')+(person?' · '+modEsc(person.name||'Technicien'):'')+'</div>'+(r.details?'<div style="white-space:pre-wrap;margin-top:10px">'+modEsc(r.details)+'</div>':'')+(canManage?'<div class="row" style="margin-top:12px"><button class="s" onclick="modCycle(\''+r.id+'\')">Changer l’état</button><button class="s" style="color:var(--r)" onclick="modDelete(\''+r.id+'\')">Supprimer</button></div>':'')+'</div>'
+ }).join('')||'<div class="card m">Aucune fiche pour ce module.</div>');
+}
+async function modAdd(){
+ const title=$('modTitle').value.trim(),details=$('modDetails').value.trim(),date=$('modDate').value||null,status=$('modStatus').value;
+ const msg=$('modMsg');if(!title){msg.textContent='Le titre est obligatoire.';return}
+ const owner=$('modOwner')?$('modOwner').value:AU.user.id;
+ try{
+  await api('/rest/v1/app_module_records',{m:'POST',b:{module_key:MODKEY,title,details,status,event_date:date,owner_id:owner,created_by:AU.user.id},h:{Prefer:'return=minimal'}});
+  tst('Fiche enregistrée');await modLoad();
+ }catch(e){msg.textContent='Échec : '+String(e.message).slice(0,220)}
+}
+async function modCycle(id){
+ const r=MODROWS.find(x=>x.id===id);if(!r)return;
+ const states=['Nouveau','Planifié','En cours','Terminé','Annulé'],next=states[(states.indexOf(r.status)+1)%states.length];
+ try{await api('/rest/v1/app_module_records?id=eq.'+encodeURIComponent(id),{m:'PATCH',b:{status:next,updated_at:new Date().toISOString()},h:{Prefer:'return=minimal'}});await modLoad()}catch(e){tst('Modification impossible : '+String(e.message).slice(0,100))}
+}
+async function modDelete(id){
+ if(!confirm('Supprimer cette fiche ?'))return;
+ try{await api('/rest/v1/app_module_records?id=eq.'+encodeURIComponent(id),{m:'DELETE',h:{Prefer:'return=minimal'}});await modLoad()}catch(e){tst('Suppression impossible : '+String(e.message).slice(0,100))}
+}
+
 render();dv(0);initUI();if(ON()&&/type=recovery/.test(location.hash))showReset();else if(ON()&&!AU)showLogin();else if(AU){$('acc').style.display='block';$('lo2').style.display='flex';$('hav').style.display='block';sst(navigator.onLine?'ok':'off');loadP();flush();snap();pullM();setInterval(pullM,90000);window.addEventListener&&window.addEventListener('online',()=>{flush();snap();pullM()})}$('mo').value=ym(Date.now());setInterval(tick,1000);
 </script></body></html>
