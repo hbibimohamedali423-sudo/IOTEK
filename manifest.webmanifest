@@ -1,6 +1,6 @@
 {
-  "name": "MAH CORE Operations",
-  "short_name": "MAH CORE",
+  "name": "MDH",
+  "short_name": "MDH",
   "description": "Plateforme intégrée de gestion des opérations techniques, missions, pointage et rapports — créée par Mohamed Ali Hbibi.",
   "start_url": "./",
   "scope": "./",
