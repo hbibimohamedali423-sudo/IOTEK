@@ -1,7 +1,7 @@
 {
-  "name": "IOTEK — Ordre de mission",
-  "short_name": "IOTEK",
-  "description": "Pointage, missions, preuves de travail et rapports pour les équipes IOTEK",
+  "name": "MAH CORE Operations",
+  "short_name": "MAH CORE",
+  "description": "Plateforme intégrée de gestion des opérations techniques, missions, pointage et rapports — créée par Mohamed Ali Hbibi.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
