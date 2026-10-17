@@ -1,11 +1,43 @@
-/* MADO — Deutsch + English (additive layer)
-   Loaded with: <script defer src="i18n.js"></script> in index.html.
-   Translates French UI text to German/English at runtime and adds the
-   two language buttons in Compte > Langue. Any failure leaves the app untouched. */
+/* MADO — security fixes + Deutsch/English (additive layer)
+   Loaded with: <script src="i18n.js"></script> in <head> of index.html (no "defer").
+   1) closes the stored-XSS holes (avatar, photo paths) and the reset-link hole;
+   2) translates French UI text to German/English and adds the two language
+      buttons in Compte > Langue. Any failure leaves the app untouched. */
 (function () {
+  /* ---------- PHASE 1 — runs immediately (before the app script when loaded in <head>) ----------
+     Reset-password links put the token in the URL; the app injects it into HTML unescaped.
+     Anything that is not a plain JWT is dropped from the URL before the app can read it. */
+  try {
+    var h0 = location.hash;
+    if (h0 && /type=recovery/.test(h0)) {
+      var tk0 = new URLSearchParams(h0.slice(1)).get('access_token') || '';
+      if (!/^[A-Za-z0-9._-]+$/.test(tk0)) history.replaceState(null, '', location.pathname + location.search);
+    }
+  } catch (e) {}
+
+  function main() {
   try {
     if (typeof LG === 'undefined') return;
     var L = LG === 'de' ? 1 : LG === 'en' ? 2 : 0;
+
+    /* ---------- 0) security fixes (all languages) ----------
+       avHtml(): avatar comes from other users' profiles -> only real image data URLs are allowed.
+       thumbs(): photo paths come from other users' snapshots -> only "<uuid>/<name>.jpg" is allowed. */
+    try {
+      var IMG = /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/;
+      window.avHtml = function (src, nm, sz) {
+        var ok = typeof src === 'string' && IMG.test(src);
+        var t = (String(nm || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2) || '?').toUpperCase();
+        sz = +sz || 36;
+        return '<span class="av" style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.round(sz / 2.6) + 'px;' +
+          (ok ? "background-image:url('" + src + "')" : '') + '">' + (ok ? '' : esc(t)) + '</span>';
+      };
+      var PATH = /^[0-9a-f-]{36}\/[0-9a-z]+\.jpg$/i;
+      window.thumbs = function (a) {
+        a = (a || []).filter(function (q) { return typeof q === 'string' && PATH.test(q); });
+        return a.length ? '<div class="ph">' + a.map(function (q) { return '<img data-p="' + q + '" onclick="zoom(this.src)">'; }).join('') + '</div>' : '';
+      };
+    } catch (e) {}
 
     /* ---------- 1) language buttons (always, so FR/AR users can switch) ---------- */
     var ar = document.getElementById('lg_ar'), row = ar && ar.parentNode;
@@ -31,6 +63,17 @@
     window.thUI();
 
     if (!L) return; // French / Arabic: nothing else to do
+
+    /* dictation language follows the app language */
+    window.dict = function (i) {
+      var R = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!R) { tst('Dictée non supportée : utilisez le micro du clavier'); return; }
+      var r = new R();
+      r.lang = LG === 'de' ? 'de-DE' : 'en-US';
+      r.onresult = function (e) { S.t[i].n = (S.t[i].n ? S.t[i].n + ' ' : '') + e.results[0][0].transcript; save(); render(); };
+      r.onerror = function () { tst('Dictée impossible'); };
+      r.start(); tst('Parlez maintenant…');
+    };
 
     /* ---------- 2) dictionary: [French, Deutsch, English] ---------- */
     var T = [
@@ -343,4 +386,9 @@
       Date.prototype[f] = function (l, p) { return o.call(this, l === 'fr-FR' ? LOC : l, p); };
     });
   } catch (e) { /* never break the app */ }
+  }
+
+  /* run after the app's own script has executed */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
+  else main();
 })();
