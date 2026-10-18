@@ -418,7 +418,7 @@ const MODS=[
  {k:'notifications',n:'Notifications',desc:'Alertes et rappels internes'},
  {k:'invoices',n:'Factures',desc:'Factures envoyées par le responsable après intervention'}
 ];
-let MODKEY='maintenance', MODROWS=[], MODPEOPLE=[], INVOICES=[], INV_PRESET=null;
+let MODKEY='maintenance', MODROWS=[], MODPEOPLE=[], INVOICES=[], INV_PRESET=null, INV_FILE=null;
 function modEsc(v){return esc(v==null?'':String(v))}
 function modGo(k){MODKEY=k;modLoad()}
 async function modLoad(){
