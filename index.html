@@ -425,9 +425,10 @@ async function modLoad(){
  if(!AU){$('modForm').innerHTML='<div class="m">Connectez-vous pour utiliser les modules.</div>';return}
  $('modList').innerHTML='<div class="card m">Chargement…</div>';
  try{
-  const jobs=[api('/rest/v1/app_module_records?select=*&order=created_at.desc'),api('/rest/v1/technician_invoices?select=*&order=created_at.desc')];
+  const jobs=[api('/rest/v1/app_module_records?select=*&order=created_at.desc')];
+  if(MODKEY==='invoices')jobs.push(api('/rest/v1/technician_invoices?select=*&order=created_at.desc'));
   if(PR&&PR.role==='manager')jobs.push(api('/rest/v1/profiles?select=id,name,role&order=name.asc'));
-  const out=await Promise.all(jobs);MODROWS=out[0]||[];INVOICES=out[1]||[];MODPEOPLE=out[2]||[];
+  const out=await Promise.all(jobs);MODROWS=out[0]||[];let oi=1;INVOICES=MODKEY==='invoices'?(out[oi++]||[]):[];MODPEOPLE=(PR&&PR.role==='manager')?(out[oi]||[]):[];
   renderMods();
  }catch(e){
   $('modForm').innerHTML='<div class="m">Les modules nécessitent la migration SQL de Supabase. Ouvrez le fichier supabase/migrations/20261014_mado_operational_modules.sql dans GitHub et exécutez-le dans Supabase SQL Editor.</div>';
