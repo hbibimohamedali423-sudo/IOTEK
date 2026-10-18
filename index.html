@@ -492,14 +492,6 @@ async function invoiceSend(){
  const payload={invoice_number:number,mission_title:$('invMission').value.trim(),site:$('invSite').value.trim(),task_title:$('invTask').value.trim(),amount,currency:$('invCurrency').value,details:$('invDetails').value.trim(),owner_id:owner,created_by:AU.user.id,invoice_date:new Date().toISOString().slice(0,10),status:'Envoyée',attachment:INV_FILE?INV_FILE.data:null,attachment_name:INV_FILE?INV_FILE.name:null};
  try{await api('/rest/v1/technician_invoices',{m:'POST',b:payload,h:{Prefer:'return=minimal'}});INV_PRESET=null;INV_FILE=null;tst('Facture envoyée au technicien');await modLoad()}catch(e){msg.textContent='Échec : '+String(e.message).slice(0,220)}
 }
- async function invoiceSend(){
- if(!PR||PR.role!=='manager'){tst('Action réservée au responsable');return}
- const owner=$('invOwner').value,amount=Number($('invAmount').value),msg=$('invMsg');
- if(!owner||!Number.isFinite(amount)||amount<=0){msg.textContent='Choisissez un technicien et saisissez un montant valide.';return}
- const number=$('invNumber').value.trim()||('MADO-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-6));
- const payload={invoice_number:number,mission_title:$('invMission').value.trim(),site:$('invSite').value.trim(),task_title:$('invTask').value.trim(),amount,currency:$('invCurrency').value,details:$('invDetails').value.trim(),owner_id:owner,created_by:AU.user.id,invoice_date:new Date().toISOString().slice(0,10),status:'Envoyée'};
- try{await api('/rest/v1/technician_invoices',{m:'POST',b:payload,h:{Prefer:'return=minimal'}});INV_PRESET=null;tst('Facture envoyée au technicien');await modLoad()}catch(e){msg.textContent='Échec : '+String(e.message).slice(0,220)}
-}
 function invoicePdf(id){
  const v=INVOICES.find(x=>x.id===id);if(!v)return;
  if(!window.jspdf||!window.jspdf.jsPDF){tst('PDF indisponible');return}

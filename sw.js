@@ -1,8 +1,8 @@
 // IOTEK — service worker : l'application s'ouvre même sans Internet
-// v4 : pré-cache de tous les fichiers locaux (dont la traduction mado-i18n-v7.js),
+// v5 : pré-cache de tous les fichiers locaux (dont la traduction mado-i18n-v9.js et materiel.html),
 //      filtrage des réponses valides, fallback correct par type de requête,
 //      et nettoyage automatique des anciens caches pour éviter les versions périmées.
-const C='iotek-v4',A=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','mado-i18n-v7.js'];
+const C='iotek-v5',A=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','mado-i18n-v9.js','materiel.html'];
 const EXT_RX=/fonts\.(googleapis|gstatic)\.com|cdnjs\.cloudflare\.com/;
 // Pré-cache : un échec sur une ressource ne doit pas faire échouer toute l'installation.
 self.addEventListener('install',e=>{
