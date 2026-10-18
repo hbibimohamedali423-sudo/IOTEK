@@ -452,6 +452,7 @@ function invoiceNew(ownerId,taskIndex){
  if(!PR||PR.role!=='manager')return;
  const emp=TM&&TM.ss.find(x=>x.user_id===ownerId),task=emp&&emp.data&&emp.data.t&&emp.data.t[taskIndex];
  INV_PRESET={owner_id:ownerId,task_title:task?task.t:'',site:task?task.c:'',mission_title:task&&task.mid?((TM.ms||[]).find(m=>m.id===task.mid)||{}).title||'':'',notes:task?task.r||'':''};
+ INV_FILE=null;
  MODKEY='invoices';tab(7);modLoad();
 }
 function renderInvoices(){
@@ -459,12 +460,39 @@ function renderInvoices(){
  const people=MODPEOPLE.filter(p=>p.role!=='manager');
  const preset=INV_PRESET||{};
  const ownerOptions=people.map(p=>'<option value="'+modEsc(p.id)+'" '+(preset.owner_id===p.id?'selected':'')+'>'+modEsc(p.name||p.id)+'</option>').join('');
- $('modForm').innerHTML=(manager?'<h2>Envoyer une facture</h2><div class="m">Le technicien recevra cette facture dans son compte MADO.</div><label class="m">Technicien</label><select id="invOwner">'+ownerOptions+'</select><label class="m">Numéro de facture</label><input id="invNumber" maxlength="80" placeholder="Ex. FAC-2026-001"><label class="m">Mission</label><input id="invMission" maxlength="180" placeholder="Nom de la mission" value="'+modEsc(preset.mission_title||'')+'"><label class="m">Site / client</label><input id="invSite" maxlength="180" placeholder="Site ou client" value="'+modEsc(preset.site||'')+'"><label class="m">Tâche terminée</label><input id="invTask" maxlength="180" placeholder="Tâche réalisée" value="'+modEsc(preset.task_title||'')+'"><div class="row"><div><label class="m">Montant</label><input id="invAmount" type="number" min="0.001" step="0.001" placeholder="0.000"></div><div><label class="m">Devise</label><select id="invCurrency"><option>TND</option><option>EUR</option><option>USD</option></select></div></div><label class="m">Détails / notes</label><textarea id="invDetails" rows="3" maxlength="3000" placeholder="Détails de la facture">'+modEsc(preset.notes||'')+'</textarea><button style="width:100%;margin-top:12px" onclick="invoiceSend()">Envoyer la facture</button><div id="invMsg" class="m" style="margin-top:8px"></div>':'<h2>Mes factures</h2><div class="m">Les factures envoyées par le responsable apparaissent ici.</div>')+
+ $('modForm').innerHTML=(manager?'<h2>Envoyer une facture</h2><div class="m">Le technicien recevra cette facture dans son compte MADO.</div><label class="m">Technicien</label><select id="invOwner">'+ownerOptions+'</select><label class="m">Numéro de facture</label><input id="invNumber" maxlength="80" placeholder="Ex. FAC-2026-001"><label class="m">Mission</label><input id="invMission" maxlength="180" placeholder="Nom de la mission" value="'+modEsc(preset.mission_title||'')+'"><label class="m">Site / client</label><input id="invSite" maxlength="180" placeholder="Site ou client" value="'+modEsc(preset.site||'')+'"><label class="m">Tâche terminée</label><input id="invTask" maxlength="180" placeholder="Tâche réalisée" value="'+modEsc(preset.task_title||'')+'"><div class="row"><div><label class="m">Montant</label><input id="invAmount" type="number" min="0.001" step="0.001" placeholder="0.000"></div><div><label class="m">Devise</label><select id="invCurrency"><option>TND</option><option>EUR</option><option>USD</option></select></div></div><label class="m">Détails / notes</label><textarea id="invDetails" rows="3" maxlength="3000" placeholder="Détails de la facture">'+modEsc(preset.notes||'')+'</textarea><label class="m">Fichier joint (facture, devis, bon…)</label><label class="btn" style="display:block;text-align:center">Choisir un fichier<input type="file" id="invFile" accept="application/pdf,image/*" hidden onchange="invFile(this.files[0])"></label><div class="m" id="invFileInfo" style="margin-top:6px">Aucun fichier joint.</div><div class="m">PDF ou image · 4 Mo maximum · optionnel</div><button style="width:100%;margin-top:12px" onclick="invoiceSend()">Envoyer la facture</button><div id="invMsg" class="m" style="margin-top:8px"></div>':'<h2>Mes factures</h2><div class="m">Les factures envoyées par le responsable apparaissent ici.</div>')+
  '<div id="invList" style="margin-top:16px"><h2>Factures reçues / envoyées</h2>'+
- (INVOICES.map(v=>{const person=MODPEOPLE.find(p=>p.id===v.owner_id);return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+modEsc(v.invoice_number||'Facture')+'</b><span class="pill" style="--led:var(--ok)">'+modEsc(v.status||'Envoyée')+'</span></div><div class="m" style="margin-top:6px">'+modEsc(v.mission_title||'Mission')+' · '+modEsc(v.site||'')+(manager?' · '+modEsc(person?person.name:'Technicien'):'')+'</div><div style="font-size:20px;font-weight:700;margin-top:8px">'+modEsc(Number(v.amount).toFixed(3))+' '+modEsc(v.currency||'TND')+'</div>'+(v.task_title?'<div class="m">'+modEsc(v.task_title)+'</div>':'')+(v.details?'<div style="white-space:pre-wrap;margin-top:8px">'+modEsc(v.details)+'</div>':'')+'<button class="s" style="width:100%;margin-top:10px" onclick="invoicePdf(\''+v.id+'\')">Télécharger la facture PDF</button></div>'}).join('')||'<div class="card m">Aucune facture pour le moment.</div>')+'</div>';
+ (INVOICES.map(v=>{const person=MODPEOPLE.find(p=>p.id===v.owner_id);return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+modEsc(v.invoice_number||'Facture')+'</b><span class="pill" style="--led:var(--ok)">'+modEsc(v.status||'Envoyée')+'</span></div><div class="m" style="margin-top:6px">'+modEsc(v.mission_title||'Mission')+' · '+modEsc(v.site||'')+(manager?' · '+modEsc(person?person.name:'Technicien'):'')+'</div><div style="font-size:20px;font-weight:700;margin-top:8px">'+modEsc(Number(v.amount).toFixed(3))+' '+modEsc(v.currency||'TND')+'</div>'+(v.task_title?'<div class="m">'+modEsc(v.task_title)+'</div>':'')+(v.details?'<div style="white-space:pre-wrap;margin-top:8px">'+modEsc(v.details)+'</div>':'')+'<button class="s" style="width:100%;margin-top:10px" onclick="invoicePdf(\''+v.id+'\')">Télécharger la facture PDF</button>'+(v.attachment?'<button class="s" style="width:100%;margin-top:8px" onclick="invDl(\''+v.id+'\')">Télécharger le fichier joint ('+modEsc(v.attachment_name||"fichier")+')</button>':'')+'</div>'}).join('')||'<div class="card m">Aucune facture pour le moment.</div>')+'</div>';
  if(INV_PRESET&&manager&&$('invOwner')){$('invOwner').value=INV_PRESET.owner_id||$('invOwner').value;}
 }
+function invExt(m){const t=String(m||'').match(/^data:([^;,]+)/),s=t?t[1]:'';return s==='application/pdf'?'pdf':s==='image/png'?'png':s==='image/webp'?'webp':s==='image/gif'?'gif':'jpg'}
+function invFile(f){
+ if(!f)return;
+ const okType=/(pdf|image)/.test(f.type)||/\.(pdf|jpe?g|png|webp|gif)$/i.test(f.name);
+ if(!okType){tst('Format non accepté : PDF ou image uniquement');return}
+ if(f.size>4e6){tst('Fichier trop lourd (max 4 Mo)');return}
+ const r=new FileReader();
+ r.onload=()=>{INV_FILE={data:String(r.result),name:f.name.slice(0,120)};invFileUI();tst('Fichier joint ✓')};
+ r.onerror=()=>tst('Lecture du fichier impossible');
+ r.readAsDataURL(f);
+}
+function invFileUI(){const e=$('invFileInfo');if(e)e.innerHTML=INV_FILE?modEsc(INV_FILE.name)+' <span style="color:var(--a)" onclick="invFileClear()">✕</span>':'Aucun fichier joint.'}
+function invFileClear(){INV_FILE=null;const i=$('invFile');if(i)i.value='';invFileUI()}
+function invDl(id){
+ const v=INVOICES.find(x=>x.id===id);if(!v||!v.attachment)return;
+ const a=document.createElement('a');
+ a.href=v.attachment;a.download=v.attachment_name||('facture-'+id.slice(0,8)+'.'+invExt(String(v.attachment).slice(5,25)));
+ document.body.appendChild(a);a.click();a.remove();
+}
 async function invoiceSend(){
+ if(!PR||PR.role!=='manager'){tst('Action réservée au responsable');return}
+ const owner=$('invOwner').value,amount=Number($('invAmount').value),msg=$('invMsg');
+ if(!owner||!Number.isFinite(amount)||amount<=0){msg.textContent='Choisissez un technicien et saisissez un montant valide.';return}
+ const number=$('invNumber').value.trim()||('MADO-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-6));
+ const payload={invoice_number:number,mission_title:$('invMission').value.trim(),site:$('invSite').value.trim(),task_title:$('invTask').value.trim(),amount,currency:$('invCurrency').value,details:$('invDetails').value.trim(),owner_id:owner,created_by:AU.user.id,invoice_date:new Date().toISOString().slice(0,10),status:'Envoyée',attachment:INV_FILE?INV_FILE.data:null,attachment_name:INV_FILE?INV_FILE.name:null};
+ try{await api('/rest/v1/technician_invoices',{m:'POST',b:payload,h:{Prefer:'return=minimal'}});INV_PRESET=null;INV_FILE=null;tst('Facture envoyée au technicien');await modLoad()}catch(e){msg.textContent='Échec : '+String(e.message).slice(0,220)}
+}
+ async function invoiceSend(){
  if(!PR||PR.role!=='manager'){tst('Action réservée au responsable');return}
  const owner=$('invOwner').value,amount=Number($('invAmount').value),msg=$('invMsg');
  if(!owner||!Number.isFinite(amount)||amount<=0){msg.textContent='Choisissez un technicien et saisissez un montant valide.';return}
