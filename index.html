@@ -295,7 +295,7 @@ function tmList(){const rows=TM.ss.map(s=>({s,x:stat(s.data)})),aw=rows.filter(r
 $('tm').innerHTML=`<div class="tiles" style="margin:0 0 14px"><div><span>Au travail</span><b>${aw}/${rows.length}</b></div><div><span>Heures auj.</span><b>${hc(tw)}</b></div><div><span>Bloquées</span><b>${bl}</b></div><div><span>Frais TND</span><b>${Math.round(fx)}</b></div></div><button style="width:100%;margin-bottom:10px" onclick="tmNew()">Nouvelle mission</button><div class="row" style="margin-bottom:14px"><button class="s" onclick="team()">Actualiser</button><button class="s" onclick="csv()">Exporter CSV</button></div>`+(rows.map(({s,x})=>`<div class="card" onclick="tmDet('${s.user_id}')"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px">${avHtml(pfx(s.user_id).avatar,uname(s.user_id),38)}<b style="font-size:17px">${esc(uname(s.user_id))}</b></div><span class="pill" style="--led:${SL[x.st][1]}">${SL[x.st][0]}</span></div><div class="m" style="margin-top:6px">Travail ${hc(x.w)} · Tâches ${x.ok}/${x.n}${x.bl?' · <span style="color:var(--r)">'+x.bl+' bloquée(s)</span>':''} · Frais ${Math.round(x.ex*100)/100} TND · Incidents ${x.ic}</div><div class="m">Synchro : ${fmt(s.updated_at)}</div></div>`).join('')||'<div class="card">Aucune donnée pour le moment.</div>')+charts(rows)+mlist()}
 async function tmDet(id){const s=TM.ss.find(x=>x.user_id==id),d=s.data;let ev=[];try{ev=await api('/rest/v1/events?user_id=eq.'+id+'&order=created_at.desc&limit=150&select=payload,client_ts,created_at')}catch(e){}
 const sec=(t,a,f)=>`<div class="card"><h2>${t}</h2>${a.map(f).join('')||'<div class="m">—</div>'}</div>`,ln=(a,b)=>`<div class="lg"><span>${a}</span><b style="white-space:nowrap;margin-left:8px">${b}</b></div>`;
-$('tm').innerHTML=`<button class="s" style="margin-bottom:12px" onclick="tmList()">← Équipe</button><div class="card"><h2>${esc(uname(id))}</h2>${(d.t||[]).map(x=>ln(esc(x.c)+' — '+esc(x.t)+(x.sg?' (signé : '+esc(x.sg.n)+')':''),'<span style="color:'+CL[x.e]+'">'+ST[x.e]+'</span>')+extra(x)).join('')}</div>`
+$('tm').innerHTML=`<button class="s" style="margin-bottom:12px" onclick="tmList()">← Équipe</button><div class="card"><h2>${esc(uname(id))}</h2>${(d.t||[]).map((x,ti)=>ln(esc(x.c)+' — '+esc(x.t)+(x.sg?' (signé : '+esc(x.sg.n)+')':''),'<span style="color:'+CL[x.e]+'">'+ST[x.e]+'</span>')+extra(x)+(x.e===3?'<button class="s" style="width:100%;margin-top:8px" onclick="event.stopPropagation();invoiceNew(\''+id+'\','+ti+')">Envoyer facture pour cette tâche</button>':'' )).join('')}</div>`
 +sec('Contact',[pfx(id)],x=>ln('Téléphone',x.phone?'<a style="color:var(--a)" href="tel:'+esc(x.phone)+'">'+esc(x.phone)+'</a>':'—')+ln('Email',x.contact_email?'<a style="color:var(--a)" href="mailto:'+esc(x.contact_email)+'">'+esc(x.contact_email)+'</a>':'—'))+sec('Ordres reçus',(d.ins||[]).slice(-20).reverse(),x=>ln(esc(x.f||'?')+' ('+esc(x.h)+') : '+esc(x.t),fmt(x.ts))+thumbs([x.pu]))+sec('Frais',(d.ex||[]).slice(-20).reverse(),x=>ln(esc(x.c)+' '+m2(x.a)+' '+esc(x.n||''),fmt(x.ts))+thumbs([x.pu]))+sec('Incidents',(d.inc||[]).slice(-20).reverse(),x=>ln(esc(x.k)+(x.g?' ['+esc(x.g)+']':'')+' : '+esc(x.t),fmt(x.ts))+thumbs([x.pu]))+sec('Journal (heure du serveur)',ev,e=>ln(esc(e.payload.txt),fmt(e.created_at)));ldImgs()}
 function csv(){const rows=[['Nom','Statut','Travail auj.','Tâches terminées','Tâches','Bloquées','Frais TND','Incidents','Dernière synchro']];TM.ss.forEach(s=>{const x=stat(s.data);rows.push([uname(s.user_id),SL[x.st][0],hc(x.w),x.ok,x.n,x.bl,Math.round(x.ex*100)/100,x.ic,s.updated_at])});const b=new Blob(['\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='equipe-'+ym(Date.now())+'.csv';a.click()}
 function lg(t){S.log.push({ts:Date.now(),txt:t});qEv(t)}
@@ -415,18 +415,20 @@ const MODS=[
  {k:'planning',n:'Planning',desc:'Rendez-vous et interventions planifiées'},
  {k:'vehicles',n:'Véhicules',desc:'Véhicules, affectations et suivi'},
  {k:'documents',n:'Documents & Contrats',desc:'Références et échéances des documents'},
- {k:'notifications',n:'Notifications',desc:'Alertes et rappels internes'}
+ {k:'notifications',n:'Notifications',desc:'Alertes et rappels internes'},
+ {k:'invoices',n:'Factures',desc:'Factures envoyées par le responsable après intervention'}
 ];
-let MODKEY='maintenance', MODROWS=[], MODPEOPLE=[];
+let MODKEY='maintenance', MODROWS=[], MODPEOPLE=[], INVOICES=[], INV_PRESET=null;
 function modEsc(v){return esc(v==null?'':String(v))}
-function modGo(k){MODKEY=k;renderMods()}
+function modGo(k){MODKEY=k;modLoad()}
 async function modLoad(){
  if(!AU){$('modForm').innerHTML='<div class="m">Connectez-vous pour utiliser les modules.</div>';return}
  $('modList').innerHTML='<div class="card m">Chargement…</div>';
  try{
   const jobs=[api('/rest/v1/app_module_records?select=*&order=created_at.desc')];
+  if(MODKEY==='invoices')jobs.push(api('/rest/v1/technician_invoices?select=*&order=created_at.desc'));
   if(PR&&PR.role==='manager')jobs.push(api('/rest/v1/profiles?select=id,name,role&order=name.asc'));
-  const out=await Promise.all(jobs);MODROWS=out[0]||[];MODPEOPLE=out[1]||[];
+  const out=await Promise.all(jobs);MODROWS=out[0]||[];let oi=1;INVOICES=MODKEY==='invoices'?(out[oi++]||[]):[];MODPEOPLE=(PR&&PR.role==='manager')?(out[oi]||[]):[];
   renderMods();
  }catch(e){
   $('modForm').innerHTML='<div class="m">Les modules nécessitent la migration SQL de Supabase. Ouvrez le fichier supabase/migrations/20261014_mado_operational_modules.sql dans GitHub et exécutez-le dans Supabase SQL Editor.</div>';
@@ -434,8 +436,9 @@ async function modLoad(){
  }
 }
 function renderMods(){
- $('modTabs').innerHTML=MODS.map(m=>'<button class="chip '+(m.k===MODKEY?'on':'')+'" onclick="modGo(\''+m.k+'\')">'+m.n+'</button>').join('');
+ $('modTabs').innerHTML=MODS.map(m=>'<button class="chip '+(m.k===MODKEY?'on':'')+'" onclick="modGo(\''+m.k+'\')">'+m.n+(m.k==='invoices'&&PR&&PR.role!=='manager'&&INVOICES.filter(v=>v.status==='Envoyée').length?' ('+INVOICES.filter(v=>v.status==='Envoyée').length+')':'')+'</button>').join('');
  const m=MODS.find(x=>x.k===MODKEY)||MODS[0];
+ if(MODKEY==='invoices'){renderInvoices();return;}
  const owners=(PR&&PR.role==='manager'&&MODPEOPLE.length)?'<label class="m">Attribuer à</label><select id="modOwner">'+MODPEOPLE.map(p=>'<option value="'+modEsc(p.id)+'">'+modEsc(p.name||p.id)+' ('+modEsc(p.role||'technicien')+')</option>').join('')+'</select>':'';
  $('modForm').innerHTML='<h2>'+m.n+'</h2><div class="m">'+m.desc+'</div><input id="modTitle" maxlength="160" placeholder="'+(MODKEY==='stock'?'Nom de l’équipement / mouvement':MODKEY==='sites'?'Nom du client ou du site':MODKEY==='vehicles'?'Véhicule / immatriculation':MODKEY==='documents'?'Nom du document ou contrat':MODKEY==='notifications'?'Titre de l’alerte':'Titre')+'"><textarea id="modDetails" rows="3" maxlength="4000" placeholder="Détails, référence, quantité, adresse ou notes"></textarea><div class="row"><div><label class="m">Date</label><input id="modDate" type="date"></div><div><label class="m">État</label><select id="modStatus"><option>Nouveau</option><option>Planifié</option><option>En cours</option><option>Terminé</option><option>Annulé</option></select></div></div>'+owners+'<button style="width:100%;margin-top:12px" onclick="modAdd()">Enregistrer</button><div id="modMsg" class="m" style="margin-top:8px"></div>';
  const rows=MODROWS.filter(r=>r.module_key===MODKEY);
@@ -444,6 +447,39 @@ function renderMods(){
  const canManage=(PR&&PR.role==='manager')||r.owner_id===AU.user.id;
  return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><b>'+modEsc(r.title)+'</b><span class="pill" style="--led:'+(r.status==='Terminé'?'var(--ok)':r.status==='En cours'?'var(--a)':'var(--w)')+'">'+modEsc(r.status)+'</span></div><div class="m" style="margin-top:6px">'+modEsc(r.event_date||'Sans date')+(person?' · '+modEsc(person.name||'Technicien'):'')+'</div>'+(r.details?'<div style="white-space:pre-wrap;margin-top:10px">'+modEsc(r.details)+'</div>':'')+(canManage?'<div class="row" style="margin-top:12px"><button class="s" onclick="modCycle(\''+r.id+'\')">Changer l’état</button><button class="s" style="color:var(--r)" onclick="modDelete(\''+r.id+'\')">Supprimer</button></div>':'')+'</div>'
  }).join('')||'<div class="card m">Aucune fiche pour ce module.</div>');
+}
+function invoiceNew(ownerId,taskIndex){
+ if(!PR||PR.role!=='manager')return;
+ const emp=TM&&TM.ss.find(x=>x.user_id===ownerId),task=emp&&emp.data&&emp.data.t&&emp.data.t[taskIndex];
+ INV_PRESET={owner_id:ownerId,task_title:task?task.t:'',site:task?task.c:'',mission_title:task&&task.mid?((TM.ms||[]).find(m=>m.id===task.mid)||{}).title||'':'',notes:task?task.r||'':''};
+ MODKEY='invoices';tab(7);modLoad();
+}
+function renderInvoices(){
+ const manager=PR&&PR.role==='manager';
+ const people=MODPEOPLE.filter(p=>p.role!=='manager');
+ const preset=INV_PRESET||{};
+ const ownerOptions=people.map(p=>'<option value="'+modEsc(p.id)+'" '+(preset.owner_id===p.id?'selected':'')+'>'+modEsc(p.name||p.id)+'</option>').join('');
+ $('modForm').innerHTML=(manager?'<h2>Envoyer une facture</h2><div class="m">Le technicien recevra cette facture dans son compte MADO.</div><label class="m">Technicien</label><select id="invOwner">'+ownerOptions+'</select><label class="m">Numéro de facture</label><input id="invNumber" maxlength="80" placeholder="Ex. FAC-2026-001"><label class="m">Mission</label><input id="invMission" maxlength="180" placeholder="Nom de la mission" value="'+modEsc(preset.mission_title||'')+'"><label class="m">Site / client</label><input id="invSite" maxlength="180" placeholder="Site ou client" value="'+modEsc(preset.site||'')+'"><label class="m">Tâche terminée</label><input id="invTask" maxlength="180" placeholder="Tâche réalisée" value="'+modEsc(preset.task_title||'')+'"><div class="row"><div><label class="m">Montant</label><input id="invAmount" type="number" min="0.001" step="0.001" placeholder="0.000"></div><div><label class="m">Devise</label><select id="invCurrency"><option>TND</option><option>EUR</option><option>USD</option></select></div></div><label class="m">Détails / notes</label><textarea id="invDetails" rows="3" maxlength="3000" placeholder="Détails de la facture">'+modEsc(preset.notes||'')+'</textarea><button style="width:100%;margin-top:12px" onclick="invoiceSend()">Envoyer la facture</button><div id="invMsg" class="m" style="margin-top:8px"></div>':'<h2>Mes factures</h2><div class="m">Les factures envoyées par le responsable apparaissent ici.</div>')+
+ '<div id="invList" style="margin-top:16px"><h2>Factures reçues / envoyées</h2>'+
+ (INVOICES.map(v=>{const person=MODPEOPLE.find(p=>p.id===v.owner_id);return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+modEsc(v.invoice_number||'Facture')+'</b><span class="pill" style="--led:var(--ok)">'+modEsc(v.status||'Envoyée')+'</span></div><div class="m" style="margin-top:6px">'+modEsc(v.mission_title||'Mission')+' · '+modEsc(v.site||'')+(manager?' · '+modEsc(person?person.name:'Technicien'):'')+'</div><div style="font-size:20px;font-weight:700;margin-top:8px">'+modEsc(Number(v.amount).toFixed(3))+' '+modEsc(v.currency||'TND')+'</div>'+(v.task_title?'<div class="m">'+modEsc(v.task_title)+'</div>':'')+(v.details?'<div style="white-space:pre-wrap;margin-top:8px">'+modEsc(v.details)+'</div>':'')+'<button class="s" style="width:100%;margin-top:10px" onclick="invoicePdf(\''+v.id+'\')">Télécharger la facture PDF</button></div>'}).join('')||'<div class="card m">Aucune facture pour le moment.</div>')+'</div>';
+ if(INV_PRESET&&manager&&$('invOwner')){$('invOwner').value=INV_PRESET.owner_id||$('invOwner').value;}
+}
+async function invoiceSend(){
+ if(!PR||PR.role!=='manager'){tst('Action réservée au responsable');return}
+ const owner=$('invOwner').value,amount=Number($('invAmount').value),msg=$('invMsg');
+ if(!owner||!Number.isFinite(amount)||amount<=0){msg.textContent='Choisissez un technicien et saisissez un montant valide.';return}
+ const number=$('invNumber').value.trim()||('MADO-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-6));
+ const payload={invoice_number:number,mission_title:$('invMission').value.trim(),site:$('invSite').value.trim(),task_title:$('invTask').value.trim(),amount,currency:$('invCurrency').value,details:$('invDetails').value.trim(),owner_id:owner,created_by:AU.user.id,invoice_date:new Date().toISOString().slice(0,10),status:'Envoyée'};
+ try{await api('/rest/v1/technician_invoices',{m:'POST',b:payload,h:{Prefer:'return=minimal'}});INV_PRESET=null;tst('Facture envoyée au technicien');await modLoad()}catch(e){msg.textContent='Échec : '+String(e.message).slice(0,220)}
+}
+function invoicePdf(id){
+ const v=INVOICES.find(x=>x.id===id);if(!v)return;
+ if(!window.jspdf||!window.jspdf.jsPDF){tst('PDF indisponible');return}
+ const doc=new window.jspdf.jsPDF();doc.setFontSize(20);doc.text('MADO — FACTURE',18,22);doc.setFontSize(11);
+ const lines=['Numéro : '+(v.invoice_number||''),'Date : '+(v.invoice_date||''),'Mission : '+(v.mission_title||''),'Site / client : '+(v.site||''),'Tâche : '+(v.task_title||''),'Technicien : '+((MODPEOPLE.find(p=>p.id===v.owner_id)||{}).name||''),'','Détails : '+(v.details||'')];
+ let y=36;lines.forEach(line=>{const wrapped=doc.splitTextToSize(line,174);if(y+wrapped.length*7>275){doc.addPage();y=20}doc.text(wrapped,18,y);y+=wrapped.length*7});
+ doc.setFontSize(16);doc.text('TOTAL : '+Number(v.amount).toFixed(3)+' '+(v.currency||'TND'),18,y+8);
+ doc.save((v.invoice_number||'MADO-facture').replace(/[^a-zA-Z0-9_-]/g,'_')+'.pdf');
 }
 async function modAdd(){
  const title=$('modTitle').value.trim(),details=$('modDetails').value.trim(),date=$('modDate').value||null,status=$('modStatus').value;
