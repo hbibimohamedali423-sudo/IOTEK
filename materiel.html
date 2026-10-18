@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://*.supabase.co; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="robots" content="noindex">
+<title>MADO — Équipements</title>
+<style>
+:root{--bg:#070b12;--c:#0d1420;--c2:#131c2c;--in:#0a111b;--t:#e6eef8;--m:#7f93ab;--b:#1f2d42;--b2:#2c4160;--a:#38d6ff;--at:#031018;--ok:#3ddc84;--w:#ffb020;--r:#ff4d5e;--v:#8b7bff;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--t);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+.w{max-width:1320px;margin:0 auto;padding:0 14px}
+header{border-bottom:1px solid var(--b);padding:12px 0;margin-bottom:14px;background:linear-gradient(180deg,#0b1424,var(--bg))}
+.hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hud h1{font-size:20px;margin:0;flex:1;text-transform:uppercase;letter-spacing:.04em}
+.k{font:500 11px ui-monospace,monospace;color:var(--a)}
+[hidden]{display:none!important}
+button,.btn{font:600 15px system-ui,-apple-system,sans-serif;border:0;border-radius:4px;padding:10px 14px;background:var(--a);color:var(--at);cursor:pointer;text-decoration:none;display:inline-block}
+button.s,.btn.s{background:transparent;color:var(--t);border:1px solid var(--b2)}
+button:hover{filter:brightness(1.12)}
+input,select,textarea{width:100%;background:var(--in);color:var(--t);border:1px solid var(--b2);border-radius:4px;padding:10px;font:inherit;font-size:16px}
+label{display:block;font:500 12px ui-monospace,monospace;color:var(--m);margin:10px 0 4px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar input{flex:1 1 260px}.bar select{flex:0 1 200px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--c);border:1px solid var(--b);color:var(--m);padding:7px 12px;font-size:13px}
+.chip.on{border-color:var(--a);color:var(--a)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.card{background:linear-gradient(180deg,var(--c2),var(--c));border:1px solid var(--b);border-radius:6px;padding:14px;cursor:pointer}
+.card:hover{border-color:var(--b2)}
+.card h3{margin:2px 0 6px;font-size:16px}
+.row2{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.m{color:var(--m);font-size:13px}
+.mono{font-family:ui-monospace,monospace}
+.badge{font:600 11px ui-monospace,monospace;padding:3px 8px;border-radius:99px;border:1px solid var(--b2);white-space:nowrap}
+.st-installed{color:var(--ok);border-color:var(--ok)}.st-in_stock{color:var(--a);border-color:var(--a)}
+.st-faulty{color:var(--r);border-color:var(--r)}.st-removed,.st-replaced{color:var(--m)}
+dialog{background:var(--c);color:var(--t);border:1px solid var(--b2);border-radius:8px;padding:16px;width:min(760px,96vw);max-height:92vh;overflow:auto}
+dialog::backdrop{background:rgba(2,6,12,.8)}
+.cols{display:grid;gap:0 12px;grid-template-columns:1fr 1fr}
+@media(max-width:560px){.cols{grid-template-columns:1fr}}
+.err{color:var(--r);font-size:14px;margin:8px 0;min-height:1em}
+.hint{color:var(--w);font-size:13px}
+.log{font-size:13px;border-top:1px solid var(--b);margin-top:12px;padding-top:8px}
+.log div{padding:3px 0;border-bottom:1px dashed var(--b)}
+#login{max-width:420px;margin:40px auto}
+.empty{color:var(--m);text-align:center;padding:30px 0}
+</style>
+</head>
+<body>
+<header><div class="w hud">
+  <a class="btn s" href="index.html">← MADO</a>
+  <h1>Équipements <span class="k" id="cnt"></span></h1>
+  <button id="bAdd" type="button" hidden>+ Ajouter</button>
+  <button id="bCsv" type="button" class="s" hidden>CSV</button>
+</div></header>
+
+<div class="w">
+  <div id="login" hidden>
+    <h2>Connexion</h2>
+    <p class="m">Réservé au responsable. Connectez-vous avec le compte de l'application.</p>
+    <label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username">
+    <label for="lPw">Mot de passe</label><input id="lPw" type="password" autocomplete="current-password">
+    <div class="err" id="lErr"></div>
+    <button id="lGo" type="button">Connexion</button>
+  </div>
+
+  <div id="main" hidden>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Rechercher : n° de série, IP, MAC, nom, site, emplacement…">
+      <select id="fSt"></select>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="err" id="gErr"></div>
+    <div class="grid" id="list"></div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <div class="row2"><h2 id="dTitle" style="margin:0">Équipement</h2><button type="button" class="s" id="dClose">Fermer</button></div>
+  <div class="cols">
+    <div><label for="f_category">Catégorie</label><select id="f_category"></select></div>
+    <div><label for="f_status">Statut</label><select id="f_status"></select></div>
+    <div><label for="f_name">Nom / désignation *</label><input id="f_name" maxlength="120"></div>
+    <div><label for="f_manufacturer">Fabricant</label><input id="f_manufacturer" maxlength="80"></div>
+    <div><label for="f_model">Modèle</label><input id="f_model" maxlength="80"></div>
+    <div><label for="f_serial_number">N° de série</label><input id="f_serial_number" maxlength="80"></div>
+    <div><label for="f_site_name">Client / site</label><input id="f_site_name" maxlength="120"></div>
+    <div><label for="f_location">Emplacement (bâtiment, étage, local, rack…)</label><input id="f_location" maxlength="160"></div>
+    <div><label for="f_ip_address">Adresse IP</label><input id="f_ip_address" inputmode="decimal" placeholder="192.168.1.20"></div>
+    <div><label for="f_mac_address">Adresse MAC</label><input id="f_mac_address" placeholder="AA:BB:CC:DD:EE:FF"></div>
+    <div><label for="f_subnet_mask">Masque</label><input id="f_subnet_mask" placeholder="255.255.255.0"></div>
+    <div><label for="f_gateway">Passerelle</label><input id="f_gateway" inputmode="decimal"></div>
+    <div><label for="f_vlan">VLAN</label><input id="f_vlan" type="number" min="1" max="4094"></div>
+    <div><label for="f_mission_ref">Mission liée (référence)</label><input id="f_mission_ref" maxlength="80"></div>
+    <div><label for="f_installed_at">Date d'installation</label><input id="f_installed_at" type="date"></div>
+    <div><label for="f_warranty_until">Garantie jusqu'au</label><input id="f_warranty_until" type="date"></div>
+  </div>
+  <label>Propriétés propres à la catégorie</label>
+  <div class="cols" id="dyn"></div>
+  <label for="f_notes">Notes <span class="hint">— jamais de mots de passe ni de clés ici</span></label>
+  <textarea id="f_notes" rows="3" maxlength="2000"></textarea>
+  <div class="err" id="fErr"></div>
+  <div class="row2"><button type="button" id="dSave">Enregistrer</button><span class="m mono" id="dCode"></span></div>
+  <div class="log" id="dLog" hidden></div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var CATS = {
+    cctv: { l: 'Vidéosurveillance / NVR', f: [['channel', 'Canal / n° de caméra'], ['nvr', 'NVR associé'], ['resolution', 'Résolution'], ['storage', 'Stockage / enregistrement']] },
+    network: { l: 'Réseau / fibre', f: [['port', 'Port'], ['speed', 'Débit / liaison'], ['cable', 'N° de câble / fibre'], ['link', 'Extrémités du lien'], ['otdr', 'Mesure OTDR / puissance']] },
+    access: { l: "Contrôle d'accès", f: [['door', 'N° de porte'], ['reader', 'Lecteur'], ['lock', 'Type de serrure'], ['power', 'Alimentation'], ['io', 'Entrées / sorties']] },
+    fire_intrusion: { l: 'Incendie / intrusion', f: [['zone', 'Zone'], ['loop', 'Boucle / adresse'], ['sensor', 'Type de détecteur'], ['battery', 'Batterie (date)'], ['test', 'Dernier test']] },
+    it: { l: 'IT / serveurs', f: [['hostname', "Nom d'hôte"], ['os', 'Système'], ['cpu', 'Processeur'], ['ram', 'Mémoire'], ['disk', 'Stockage'], ['backup', 'Sauvegarde']] },
+    domotique: { l: 'Domotique', f: [['protocol', 'Protocole (KNX…)'], ['address', 'Adresse du module'], ['io', 'Entrées / sorties'], ['scenes', 'Scénarios liés']] },
+    other: { l: 'Autre', f: [['info1', 'Propriété 1'], ['info2', 'Propriété 2'], ['info3', 'Propriété 3']] }
+  };
+  var STS = { in_stock: 'En stock', installed: 'Installé', faulty: 'En panne', removed: 'Retiré', replaced: 'Remplacé' };
+  var BASE = null, KEY = null, TOKEN = null, ROWS = [], CUR = null, F = { q: '', cat: '', st: '' };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function show(el, on) { el.hidden = !on; }
+  function b64json(p) { try { return JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; } }
+  function tokenOk(t) { var p = t && b64json(t.split('.')[1] || ''); return !!(p && p.exp && p.exp * 1000 > Date.now() + 60000); }
+
+  /* ---- config (URL + public anon key) read from the app's own index.html ---- */
+  function loadCfg() {
+    return fetch('index.html', { cache: 'force-cache' }).then(function (r) { return r.text(); }).then(function (t) {
+      var u = t.match(/https:\/\/[a-z0-9]{15,25}\.supabase\.co/);
+      var js = t.match(/eyJ[\w-]+\.eyJ[\w-]+\.[\w-]+/g) || [];
+      for (var i = 0; i < js.length && !KEY; i++) { var p = b64json(js[i].split('.')[1]); if (p && p.role === 'anon') KEY = js[i]; }
+      BASE = u ? u[0] : null;
+      if (!BASE || !KEY) throw new Error('Configuration Supabase introuvable dans index.html.');
+    });
+  }
+  function storedToken() {
+    try { var o = JSON.parse(localStorage.getItem('au') || 'null'); var t = o && (o.access_token || o.token || (o.session && o.session.access_token)); if (tokenOk(t)) return t; } catch (e) {}
+    try { var s = sessionStorage.getItem('eqt'); if (tokenOk(s)) return s; } catch (e) {}
+    return null;
+  }
+
+  /* ---- REST ---- */
+  function api(path, o) {
+    o = o || {};
+    var h = { apikey: KEY, Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' };
+    if (o.prefer) h.Prefer = o.prefer;
+    return fetch(BASE + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body ? JSON.stringify(o.body) : undefined }).then(function (r) {
+      return r.text().then(function (t) {
+        var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+        if (!r.ok) { var e = new Error((j && j.message) || ('HTTP ' + r.status)); e.status = r.status; e.code = j && j.code; throw e; }
+        return j;
+      });
+    });
+  }
+  function errText(e) {
+    if (e.code === '23505') return 'Ce numéro de série existe déjà pour ce fabricant.';
+    if (e.code === '22P02' || e.code === '22023') return 'Format invalide (adresse IP, MAC ou date).';
+    if (e.status === 401 || e.status === 403 || e.code === '42501') return 'Accès réservé au responsable.';
+    return 'Erreur : ' + e.message;
+  }
+
+  /* ---- login ---- */
+  function showLogin() { show($('#login'), true); show($('#main'), false); show($('#bAdd'), false); show($('#bCsv'), false); }
+  function doLogin() {
+    $('#lErr').textContent = '';
+    fetch(BASE + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('#lEmail').value.trim(), password: $('#lPw').value }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.access_token) throw new Error(j.error_description || j.msg || 'Connexion refusée'); return j.access_token; }); })
+      .then(function (t) { TOKEN = t; try { sessionStorage.setItem('eqt', t); } catch (e) {} $('#lPw').value = ''; show($('#login'), false); load(); })
+      .catch(function (e) { $('#lErr').textContent = e.message; });
+  }
+
+  /* ---- list ---- */
+  function load() {
+    show($('#main'), true); $('#gErr').textContent = '';
+    api('equipment?select=*&order=created_at.desc&limit=1000').then(function (rows) {
+      ROWS = rows || []; show($('#bAdd'), true); show($('#bCsv'), true); render();
+      if (!ROWS.length) $('#gErr').innerHTML = '<span class="hint">Aucun équipement visible. Ce registre est réservé au compte responsable.</span>';
+    }).catch(function (e) {
+      if (e.status === 401) { try { sessionStorage.removeItem('eqt'); } catch (x) {} showLogin(); return; }
+      $('#gErr').textContent = errText(e);
+    });
+  }
+  function hay(r) {
+    var d = r.details && typeof r.details === 'object' ? Object.keys(r.details).map(function (k) { return r.details[k]; }).join(' ') : '';
+    return [r.internal_code, r.name, r.manufacturer, r.model, r.serial_number, r.site_name, r.location, r.ip_address, r.mac_address, r.mission_ref, d].join(' ').toLowerCase();
+  }
+  function render() {
+    var q = F.q.toLowerCase(), out = ROWS.filter(function (r) {
+      return (!F.cat || r.category === F.cat) && (!F.st || r.status === F.st) && (!q || hay(r).indexOf(q) > -1);
+    });
+    $('#cnt').textContent = out.length + ' / ' + ROWS.length;
+    var chips = '<button type="button" class="chip' + (F.cat ? '' : ' on') + '" data-cat="">Tout</button>';
+    Object.keys(CATS).forEach(function (k) { chips += '<button type="button" class="chip' + (F.cat === k ? ' on' : '') + '" data-cat="' + k + '">' + esc(CATS[k].l) + '</button>'; });
+    $('#chips').innerHTML = chips;
+    $('#list').innerHTML = out.length ? out.map(function (r) {
+      return '<div class="card" data-id="' + esc(r.id) + '"><div class="row2"><span class="k">' + esc(r.internal_code) + ' · ' + esc((CATS[r.category] || {}).l || r.category) + '</span>' +
+        '<span class="badge st-' + esc(r.status) + '">' + esc(STS[r.status] || r.status) + '</span></div>' +
+        '<h3>' + esc(r.name) + '</h3>' +
+        '<div class="m">' + esc([r.manufacturer, r.model].filter(Boolean).join(' ')) + '</div>' +
+        (r.serial_number ? '<div class="m mono">S/N ' + esc(r.serial_number) + '</div>' : '') +
+        (r.ip_address ? '<div class="m mono">IP ' + esc(String(r.ip_address).replace(/\/32$|\/128$/, '')) + (r.mac_address ? ' · ' + esc(r.mac_address) : '') + '</div>' : '') +
+        '<div class="m">' + esc([r.site_name, r.location].filter(Boolean).join(' — ')) + '</div></div>';
+    }).join('') : '<div class="empty">Aucun résultat.</div>';
+  }
+
+  /* ---- form ---- */
+  var PLAIN = ['name', 'manufacturer', 'model', 'serial_number', 'site_name', 'location', 'ip_address', 'mac_address', 'subnet_mask', 'gateway', 'vlan', 'mission_ref', 'installed_at', 'warranty_until', 'notes'];
+  function buildDyn(cat, vals) {
+    var f = (CATS[cat] || CATS.other).f, h = '';
+    f.forEach(function (p) { h += '<div><label for="d_' + p[0] + '">' + esc(p[1]) + '</label><input id="d_' + p[0] + '" data-d="' + p[0] + '" maxlength="160"></div>'; });
+    $('#dyn').innerHTML = h;
+    f.forEach(function (p) { var el = $('#d_' + p[0]); if (el && vals && vals[p[0]] != null) el.value = vals[p[0]]; });
+  }
+  function openForm(row) {
+    CUR = row || null; $('#fErr').textContent = '';
+    $('#dTitle').textContent = row ? 'Modifier l\'équipement' : 'Nouvel équipement';
+    $('#dCode').textContent = row ? row.internal_code : '';
+    $('#f_category').value = row ? row.category : 'cctv';
+    $('#f_status').value = row ? row.status : 'installed';
+    PLAIN.forEach(function (k) {
+      var v = row ? row[k] : ''; if (v == null) v = '';
+      if (k === 'ip_address' || k === 'gateway') v = String(v).replace(/\/32$|\/128$/, '');
+      $('#f_' + k).value = v;
+    });
+    buildDyn($('#f_category').value, row && row.details);
+    var lg = $('#dLog'); show(lg, false); lg.innerHTML = '';
+    if (row) api('equipment_log?equipment_id=eq.' + encodeURIComponent(row.id) + '&select=action,note,at&order=at.desc&limit=50').then(function (l) {
+      if (!l || !l.length) return;
+      lg.innerHTML = '<b>Historique</b>' + l.map(function (x) { return '<div><span class="m">' + esc(new Date(x.at).toLocaleString('fr-FR')) + '</span> · ' + esc(x.action) + ' — ' + esc(x.note) + '</div>'; }).join('');
+      show(lg, true);
+    }).catch(function () {});
+    if (!$('#dlg').open) $('#dlg').showModal();
+  }
+  var SECRET = /(mot\s*de\s*passe|password|passwd|\bmdp\b|\bpwd\b|pass\s*[:=]|api[\s_-]*key|secret)/i;
+  function nv(k) { var v = $('#f_' + k).value.trim(); return v === '' ? null : v; }
+  function save() {
+    $('#fErr').textContent = '';
+    var p = { category: $('#f_category').value, status: $('#f_status').value };
+    PLAIN.forEach(function (k) { p[k] = nv(k); });
+    if (!p.name) { $('#fErr').textContent = 'Le nom est obligatoire.'; return; }
+    if (p.vlan != null) p.vlan = parseInt(p.vlan, 10);
+    var det = {}, keep = (CUR && CUR.details) || {};
+    Object.keys(keep).forEach(function (k) { det[k] = keep[k]; });
+    var known = (CATS[p.category] || CATS.other).f.map(function (x) { return x[0]; });
+    known.forEach(function (k) { delete det[k]; });
+    document.querySelectorAll('#dyn [data-d]').forEach(function (el) { var v = el.value.trim(); if (v) det[el.getAttribute('data-d')] = v; });
+    p.details = det;
+    var all = [p.name, p.notes, p.location].concat(Object.keys(det).map(function (k) { return det[k]; })).join(' ');
+    if (SECRET.test(all)) { $('#fErr').textContent = 'Ne stockez ni mot de passe ni clé ici : retirez-les du texte.'; return; }
+    if (p.ip_address) {
+      var dup = ROWS.filter(function (r) { return (!CUR || r.id !== CUR.id) && String(r.ip_address || '').replace(/\/32$|\/128$/, '') === p.ip_address && (r.site_name || '').toLowerCase() === (p.site_name || '').toLowerCase() && r.status !== 'replaced' && r.status !== 'removed'; })[0];
+      if (dup && !window.confirm('Cette adresse IP est déjà utilisée par « ' + dup.name + ' » (' + dup.internal_code + ') sur le même site. Enregistrer quand même ?')) return;
+    }
+    var req = CUR ? api('equipment?id=eq.' + encodeURIComponent(CUR.id), { method: 'PATCH', body: p, prefer: 'return=representation' })
+                  : api('equipment', { method: 'POST', body: p, prefer: 'return=representation' });
+    req.then(function () { $('#dlg').close(); load(); }).catch(function (e) { $('#fErr').textContent = errText(e); });
+  }
+
+  /* ---- CSV (cells starting with = + - @ are neutralised) ---- */
+  function csv() {
+    var cols = ['internal_code', 'category', 'name', 'manufacturer', 'model', 'serial_number', 'status', 'site_name', 'location', 'ip_address', 'mac_address', 'subnet_mask', 'gateway', 'vlan', 'installed_at', 'warranty_until', 'mission_ref'];
+    var cell = function (v) { v = v == null ? '' : String(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+    var t = cols.join(',') + '\n' + ROWS.map(function (r) { return cols.map(function (c) { return cell(r[c]); }).join(','); }).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'equipements-mado.csv'; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  /* ---- wiring ---- */
+  function init() {
+    $('#f_category').innerHTML = Object.keys(CATS).map(function (k) { return '<option value="' + k + '">' + esc(CATS[k].l) + '</option>'; }).join('');
+    $('#f_status').innerHTML = Object.keys(STS).map(function (k) { return '<option value="' + k + '">' + esc(STS[k]) + '</option>'; }).join('');
+    $('#fSt').innerHTML = '<option value="">Tous les statuts</option>' + Object.keys(STS).map(function (k) { return '<option value="' + k + '">' + esc(STS[k]) + '</option>'; }).join('');
+    $('#q').addEventListener('input', function () { F.q = this.value.trim(); render(); });
+    $('#fSt').addEventListener('change', function () { F.st = this.value; render(); });
+    $('#chips').addEventListener('click', function (e) { var b = e.target.closest('[data-cat]'); if (b) { F.cat = b.getAttribute('data-cat'); render(); } });
+    $('#list').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-id]'); if (!c) return;
+      var id = c.getAttribute('data-id'); var r = ROWS.filter(function (x) { return x.id === id; })[0]; if (r) openForm(r);
+    });
+    $('#f_category').addEventListener('change', function () { buildDyn(this.value, CUR && CUR.category === this.value ? CUR.details : null); });
+    $('#bAdd').addEventListener('click', function () { openForm(null); });
+    $('#bCsv').addEventListener('click', csv);
+    $('#dSave').addEventListener('click', save);
+    $('#dClose').addEventListener('click', function () { $('#dlg').close(); });
+    $('#lGo').addEventListener('click', doLogin);
+    $('#lPw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+
+    loadCfg().then(function () {
+      TOKEN = storedToken();
+      if (TOKEN) load(); else showLogin();
+    }).catch(function (e) { show($('#main'), true); $('#gErr').textContent = e.message; });
+  }
+  init();
+})();
+</script>
+</body>
+</html>
