@@ -113,6 +113,46 @@ html[dir=rtl] .bk svg{transform:scaleX(-1)}
 details.card>summary{cursor:pointer;font:500 12px var(--f2);letter-spacing:.14em;text-transform:uppercase;color:var(--a);list-style:none;display:flex;justify-content:space-between}
 details.card>summary::-webkit-details-marker{display:none}details.card>summary::after{content:"+";font-size:16px}details[open].card>summary::after{content:"−"}details[open].card>summary{margin-bottom:12px}
 .sec{display:none}.sec.on{display:block}
+
+/* MADO modern dashboard — additive styles, existing data and logic untouched */
+.mado-launch{margin:16px 0 18px;padding:16px;background:linear-gradient(135deg,var(--c2),var(--c));border:1px solid var(--b2);border-radius:12px;position:relative;overflow:hidden}
+.mado-launch:after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--a);opacity:.9}
+.mado-launch-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.mado-launch-head h2{margin:5px 0 0;font-size:13px}
+.mado-live{display:flex;align-items:center;gap:6px;color:var(--ok);font:500 9px var(--f2);letter-spacing:.08em;white-space:nowrap}
+.mado-live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.mado-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.mado-shortcut{display:flex!important;align-items:center;gap:10px;text-align:left!important;min-width:0;padding:12px!important;background:var(--in)!important;color:var(--t)!important;border:1px solid var(--b)!important;border-radius:8px!important;clip-path:none!important;transition:border-color .18s,transform .18s}
+.mado-shortcut:hover{border-color:var(--a)!important;transform:translateY(-1px)}
+.mado-shortcut>span:nth-child(2){flex:1;min-width:0}
+.mado-shortcut b{display:block;font:600 13px var(--f1);letter-spacing:0}
+.mado-shortcut small{display:block;color:var(--m);font:400 10px/1.4 var(--f1);margin-top:3px}
+.mado-ico{display:grid;place-items:center;width:35px;height:35px;flex:none;border:1px solid rgba(56,214,255,.25);background:rgba(56,214,255,.08);color:var(--a);border-radius:8px;font:500 20px var(--f2)}
+.mado-arrow{color:var(--a);font-size:16px;flex:none}
+@media(min-width:1000px){
+ body{padding-bottom:28px;padding-left:224px}
+ header{padding:18px 0;margin-bottom:22px}
+ header .w,.w{max-width:1180px;margin-left:0;margin-right:auto;padding-left:28px;padding-right:28px}
+ nav{left:16px;right:auto;top:18px;bottom:18px;width:184px;max-width:none;height:auto;margin:0;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:7px;padding:10px;border-radius:14px}
+ nav button{flex:none;display:flex;align-items:center;gap:12px;text-align:left;padding:13px 12px;font-size:12px}
+ nav svg{width:20px;height:20px;flex:none;margin:0}
+ .mado-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+ .mado-launch{padding:20px;margin-top:22px}
+ .mado-shortcut{padding:15px!important}
+ .mado-shortcut b{font-size:14px}
+ .mado-shortcut small{font-size:11px}
+ .tiles{gap:2px}
+}
+@media(max-width:420px){
+ .mado-launch{padding:12px}
+ .mado-shortcuts{gap:7px}
+ .mado-shortcut{padding:10px 8px!important;gap:7px}
+ .mado-ico{width:30px;height:30px;font-size:17px}
+ .mado-shortcut b{font-size:12px}
+ .mado-shortcut small{font-size:9px}
+ .mado-live{font-size:8px}
+}
+
 </style></head><body>
 <header><div class="w"><div class="hud"><div><div class="logo"><img id="lg1" alt="MADO"><div><span class="k">MADO</span><b class="ttl" id="ttl">Mission</b></div></div><span class="sub" id="hsub" style="display:block;margin-top:6px"></span></div><div class="hc"><div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><b id="hclk">--:--</b><button class="hav" id="hav" onclick="tab(2)" aria-label="Mon profil"></button><button class="out" id="lo2" onclick="lo2(this)" aria-label="Se déconnecter" title="Se déconnecter"><svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4"/><path d="M16 8l4 4-4 4M20 12H10"/></svg></button></div><span class="k" id="hday">J1</span><span class="k" id="sy" style="display:block;margin-top:4px"></span></div></div></div></header>
 <div class="w">
@@ -120,6 +160,17 @@ details.card>summary::-webkit-details-marker{display:none}details.card>summary::
 <div id="warn"></div>
 <div class="card hero"><div id="hring" class="hring"></div><div><span class="k" id="hello"></span><b class="hh" id="hh">0:00</b><span class="m">Travail aujourd'hui</span></div></div>
 <div id="hbtn" class="hbtn"></div>
+<div class="mado-launch">
+  <div class="mado-launch-head"><div><span class="k">CENTRE DE PILOTAGE</span><h2>Accès rapide</h2></div><span class="mado-live"><i></i> SYSTÈME ACTIF</span></div>
+  <div class="mado-shortcuts">
+    <button class="mado-shortcut" onclick="tab(0)"><span class="mado-ico">▤</span><span><b>Missions</b><small>Suivi et exécution des tâches</small></span><span class="mado-arrow">↗</span></button>
+    <button class="mado-shortcut" onclick="tab(1)"><span class="mado-ico">◷</span><span><b>Pointage</b><small>Présence, pauses et trajets</small></span><span class="mado-arrow">↗</span></button>
+    <button class="mado-shortcut" onclick="tab(3)"><span class="mado-ico">▣</span><span><b>Dossier technique</b><small>Journal, frais et incidents</small></span><span class="mado-arrow">↗</span></button>
+    <button class="mado-shortcut" onclick="tab(7)"><span class="mado-ico">⌘</span><span><b>Modules métier</b><small>Équipements et opérations</small></span><span class="mado-arrow">↗</span></button>
+    <button class="mado-shortcut" onclick="tab(6)"><span class="mado-ico">▥</span><span><b>Rapports</b><small>Comptes rendus et synthèses</small></span><span class="mado-arrow">↗</span></button>
+    <button class="mado-shortcut" onclick="tab(2)"><span class="mado-ico">⚙</span><span><b>Paramètres</b><small>Profil et préférences</small></span><span class="mado-arrow">↗</span></button>
+  </div>
+</div>
 <div class="htl" id="htiles"></div>
 <div class="tiles kp"><div><span>Avancement</span><b id="pct">0%</b></div><div><span>Travail</span><b id="t2">0:00</b></div><div><span>Heures sup.</span><b id="t3">0:00</b></div><div><span>Frais TND</span><b id="t4">0</b></div></div>
 <div class="card"><h2>Jours de mission</h2><div id="dchart"></div></div>
