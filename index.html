@@ -113,6 +113,36 @@ html[dir=rtl] .bk svg{transform:scaleX(-1)}
 details.card>summary{cursor:pointer;font:500 12px var(--f2);letter-spacing:.14em;text-transform:uppercase;color:var(--a);list-style:none;display:flex;justify-content:space-between}
 details.card>summary::-webkit-details-marker{display:none}details.card>summary::after{content:"+";font-size:16px}details[open].card>summary::after{content:"−"}details[open].card>summary{margin-bottom:12px}
 .sec{display:none}.sec.on{display:block}
+/* ===== MADO desktop shell (additive) ===== */
+nav button.dk{display:none}
+@media(min-width:1024px){
+:root{--sw:232px}
+body{padding-bottom:28px;background:radial-gradient(900px 420px at 75% -8%,rgba(56,214,255,.12),transparent),radial-gradient(700px 400px at 10% 110%,rgba(139,123,255,.10),transparent),var(--bg)}
+nav{inset:0 auto 0 auto;inset-inline-start:0;width:var(--sw);max-width:none;margin:0;border-radius:0;border-width:0;border-inline-end:1px solid var(--b);flex-direction:column;justify-content:flex-start;gap:4px;padding:78px 12px 16px;z-index:20;overflow-y:auto}
+nav::before{content:"MADO";position:absolute;top:22px;inset-inline-start:24px;font:700 22px var(--f1);letter-spacing:.18em;color:var(--t);text-shadow:0 0 16px var(--a)}
+nav button,nav button.dk{flex:none;display:flex;align-items:center;gap:12px;text-align:start;font:500 13.5px var(--f1);padding:11px 12px;border-radius:10px;position:relative}
+nav button svg{margin:0;width:20px;height:20px}
+nav button:hover{background:rgba(56,214,255,.06);color:var(--t)}
+nav button.on::before{content:"";position:absolute;inset-block:9px;inset-inline-start:-12px;width:3px;border-radius:3px;background:var(--a);box-shadow:0 0 10px var(--a)}
+header{margin-inline-start:var(--sw)}
+header .w{max-width:1400px;margin:0;padding:0 28px}
+body>.w{max-width:1400px;margin:0;margin-inline-start:var(--sw);padding:0 28px}
+.card{border-radius:12px;background:linear-gradient(180deg,rgba(19,28,44,.85),rgba(13,20,32,.85));box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 1px 0 rgba(56,214,255,.08)}
+.card::before,.card::after{display:none}
+#toast{left:calc(50% + 116px);bottom:28px}
+#s5.on{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+#s5>*{grid-column:span 12;margin:0}
+#s5>#warn{grid-row:1}
+#s5>.hero{grid-column:1/6;grid-row:2/4}
+#s5>#hbtn{grid-column:6/13;grid-row:2}
+#s5>#htiles{grid-column:6/13;grid-row:3;grid-template-columns:repeat(4,1fr)}
+#s5>.kp{grid-column:1/13;grid-row:4}
+#s5>.card:not(.hero){grid-column:span 4}
+#s5>.card:last-child{grid-column:1/13}
+.hring{width:160px;height:160px}.hh{font-size:54px}
+#tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:10px;align-items:start}
+#tasks .card.task{margin:0}
+}
 </style></head><body>
 <header><div class="w"><div class="hud"><div><div class="logo"><img id="lg1" alt="MADO"><div><span class="k">MADO</span><b class="ttl" id="ttl">Mission</b></div></div><span class="sub" id="hsub" style="display:block;margin-top:6px"></span></div><div class="hc"><div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><b id="hclk">--:--</b><button class="hav" id="hav" onclick="tab(2)" aria-label="Mon profil"></button><button class="out" id="lo2" onclick="lo2(this)" aria-label="Se déconnecter" title="Se déconnecter"><svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4"/><path d="M16 8l4 4-4 4M20 12H10"/></svg></button></div><span class="k" id="hday">J1</span><span class="k" id="sy" style="display:block;margin-top:4px"></span></div></div></div></header>
 <div class="w">
@@ -175,7 +205,7 @@ details.card>summary::-webkit-details-marker{display:none}details.card>summary::
 
 </div>
 <div id="toast"></div><div class="vw" id="vw"></div><div class="vw" id="lo"></div>
-<nav><button class="on" data-t="5" onclick="tab(5)"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Accueil</button><button data-t="0" onclick="tab(0)"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Missions</button><button data-t="3" onclick="tab(3)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Dossier</button><button data-t="4" id="nt4" style="display:none" onclick="tab(4);team()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M15 15c3 0 6 1.5 6 4"/></svg>Équipe</button><button data-t="2" onclick="tab(2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Compte</button></nav>
+<nav><button class="on" data-t="5" onclick="tab(5)"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Accueil</button><button data-t="0" onclick="tab(0)"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Missions</button><button data-t="3" onclick="tab(3)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Dossier</button><button data-t="4" id="nt4" style="display:none" onclick="tab(4);team()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M15 15c3 0 6 1.5 6 4"/></svg>Équipe</button><button class="dk" data-t="1" onclick="tab(1)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Pointage</button><button class="dk" data-t="7" onclick="tab(7);modLoad()"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>Modules</button><button class="dk" data-t="6" onclick="tab(6)"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></svg>Rapports</button><button data-t="2" onclick="tab(2)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Compte</button></nav>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const CFG={url:'https://quocktgjxzflcguszypz.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1b2NrdGdqeHpmbGNndXN6eXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0Nzc4MDQsImV4cCI6MjEwNzA1MzgwNH0.2p8EzUjawo9w05Op9kHCtpJduIt_h0LXBHTYbF1Fbc8'}; // <<< REMPLIR : URL du projet Supabase et clé "anon"
@@ -202,7 +232,7 @@ const $=i=>document.getElementById(i);
 function save(){try{localStorage.setItem(SK(),JSON.stringify(S))}catch(e){}syncSoon()}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function hm(ts){return new Date(ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-function tab(n){[0,1,2,3,4,5,6,7].forEach(i=>{const e=$('s'+i);if(e)e.classList.toggle('on',i==n)});const h=n==1||n==6?5:n;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==h));try{scrollTo(0,0)}catch(e){}}
+function tab(n){[0,1,2,3,4,5,6,7].forEach(i=>{const e=$('s'+i);if(e)e.classList.toggle('on',i==n)});const h=matchMedia('(min-width:1024px)').matches?n:(n==1||n==6?5:n);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==h));try{scrollTo(0,0)}catch(e){}}
 function today(){const d=new Date().toDateString();return S.p.filter(x=>new Date(x.ts).toDateString()==d)}
 const ON=()=>CFG.url&&CFG.key;let PR=null,TM=null;
 async function api(p,o={}){const h={apikey:CFG.key,'Content-Type':'application/json',...(AU?{Authorization:'Bearer '+AU.access_token}:{}),...(o.h||{})};const r=await fetch(CFG.url+p,{method:o.m||'GET',headers:h,body:o.b?JSON.stringify(o.b):undefined});if(r.status==401&&AU&&!o.rt){await refresh();return api(p,{...o,rt:1})}if(!r.ok)throw new Error(await r.text());const t=await r.text();return t?JSON.parse(t):null}
